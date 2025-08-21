@@ -1,18 +1,15 @@
 package com.miumg.Academia.Controlador;
 
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.miumg.Academia.Entidad.Inscripcion;
+import com.miumg.Academia.DTOS.InscripcionDTO;
 import com.miumg.Academia.Servicio.InscripcionServicio;
 
 @RestController
@@ -26,28 +23,16 @@ public class ControladorInscripcion {
     }
 
     @GetMapping
-    public List<Inscripcion> listar() {
-        return servicio.listar();
+    public List<InscripcionDTO> listar(
+            @RequestParam(required = false) Integer estudianteId,
+            @RequestParam(required = false) Integer cursoId) {
+        return servicio.listar(estudianteId, cursoId);
     }
 
     @GetMapping("/{id}")
-    public Optional<Inscripcion> obtener(@PathVariable Long id) {
-        return servicio.obtenerPorId(id);
-    }
-
-    @PostMapping
-    public Inscripcion crear(@RequestBody Inscripcion inscripcion) {
-        return servicio.guardar(inscripcion);
-    }
-
-    @PutMapping("/{id}")
-    public Inscripcion actualizar(@PathVariable Integer id, @RequestBody Inscripcion inscripcion) {
-        inscripcion.setId(id);
-        return servicio.guardar(inscripcion);
-    }
-
-    @DeleteMapping("/{id}")
-    public void eliminar(@PathVariable Long id) {
-        servicio.eliminar(id);
+    public ResponseEntity<InscripcionDTO> obtenerPorId(@PathVariable Long id) {
+        return servicio.obtenerPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

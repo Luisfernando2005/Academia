@@ -1,12 +1,14 @@
 package com.miumg.Academia.Servicio;
 
-import org.springframework.stereotype.Service;
-
-import com.miumg.Academia.Entidad.Curso;
-import com.miumg.Academia.Repositorios.RepositorioCurso;
-
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+
+import com.miumg.Academia.DTOS.CursoDTO;
+import com.miumg.Academia.Entidad.Curso;
+import com.miumg.Academia.Repositorios.RepositorioCurso;
 
 @Service
 public class CursoServicio {
@@ -17,19 +19,46 @@ public class CursoServicio {
         this.repositorio = repositorio;
     }
 
-    public List<Curso> listar() {
-        return repositorio.findAll();
+    // LISTAR CON FILTRO OPCIONAL POR NOMBRE
+    public List<CursoDTO> listar(String nombreFiltro) {
+        List<Curso> cursos;
+
+        if (nombreFiltro != null && !nombreFiltro.isEmpty()) {
+            cursos = repositorio.findByNombreContainingIgnoreCase(nombreFiltro);
+        } else {
+            cursos = repositorio.findAll();
+        }
+
+        return cursos.stream()
+                .map(this::convertirACursoDTO)
+                .collect(Collectors.toList());
     }
 
-    public Optional<Curso> obtenerPorId(Integer id) {
-        return repositorio.findById(id);
+    public Optional<CursoDTO> obtenerPorId(Integer id) {
+        return repositorio.findById(id)
+                .map(this::convertirACursoDTO);
     }
 
-    public Curso guardar(Curso curso) {
-        return repositorio.save(curso);
+    public CursoDTO guardar(Curso curso) {
+        Curso guardado = repositorio.save(curso);
+        return convertirACursoDTO(guardado);
     }
 
     public void eliminar(Integer id) {
         repositorio.deleteById(id);
+    }
+
+    private CursoDTO convertirACursoDTO(Curso curso) {
+        var profesor = curso.getProfesor();
+        Integer profesorIdObj = (profesor != null) ? profesor.getId() : null;
+        int profesorId = (profesorIdObj != null) ? profesorIdObj : 0;
+        String profesorNombre = (profesor != null) ? profesor.getNombre() : null;
+        return new CursoDTO(
+                curso.getId(),
+                curso.getNombre(),
+                curso.getDescripcion(),
+                profesorId,
+                profesorNombre
+        );
     }
 }
